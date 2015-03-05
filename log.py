@@ -11,4 +11,4 @@ class log():
 
 
     def log(self, msg):
-        print ""
+        print msg

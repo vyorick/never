@@ -7,7 +7,7 @@ import time
 import sys
 from browser import NW
 
-sys.path.append('')
+sys.path.append('..')
 try:
     from settings import *
 except:
@@ -16,7 +16,7 @@ except:
 BASE_URL = "https://gateway.nw.ru.perfectworld.eu/"
 
 nw = NW(BASE_URL, cookies)
-time.sleep(5)
+time.sleep(2)
 nw.login(useremail, password)
 time.sleep(5)
 nw.select_character(character_name)

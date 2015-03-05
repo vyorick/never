@@ -5,17 +5,15 @@ __author__ = 'yorick'
 
 import time
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from log import log
 
+logger = log()
 class NW():
     def __init__(self, base_url, cookies):
-        # self.driver = webdriver.Chrome()
         self.driver = webdriver.Firefox()
         self.driver.get('https://gateway.nw.ru.perfectworld.eu/faq.html')
-        log("page loaded")
-        # chrome_options = Options()
+        logger.log("page loaded")
         for cookie_name in cookies:
             print "set cookie: %s -> %s" % (cookie_name, cookies[cookie_name])
             self.driver.add_cookie({'name': cookie_name, 'value': cookies[cookie_name], 'path': '/'})
@@ -33,14 +31,27 @@ class NW():
         elem = self.driver.find_element_by_id('pass')
         elem.send_keys(passwd + Keys.RETURN)
 
-    def select_character(self, select_char_name):
-
-        elem = self.driver.find_element_by_class_name('content_title')
-        assert 'Выбор персонажа' in elem.text
-
+    def select_character(self, char_name):
+        logger.log("page: " + self.driver.title)
+        assert u'Выбор персонажа' in self.driver.title
+        time.sleep(5)
         elem = self.driver.find_element_by_class_name('charselect')
-        char_list = elem.find_elements_by_class_name('char-list-name')
-        assert char_list is not None
-        for char_name in char_list:
-            print char_name
+        # print elem, type(elem), elem.text
 
+        links = elem.find_elements_by_tag_name('a')
+        assert links
+        for link in links:
+            if char_name in link.text:
+                # print link, type(link), link.text
+                link.click()
+
+
+        # links = elem.find_elements_by_tag_name('a')
+        # print links, type(links)
+        '''
+        char_list = self.driver.find_elements_by_class_name('char-list-name')
+        assert char_list is not None
+        print char_list, type(char_list)
+        for char_name in char_list:
+            logger.log(char_name)
+        '''
