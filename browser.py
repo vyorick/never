@@ -9,6 +9,8 @@ from selenium.webdriver.common.keys import Keys
 from log import log
 
 logger = log()
+
+
 class NW():
     def __init__(self, base_url, cookies):
         self.driver = webdriver.Firefox()
@@ -45,13 +47,30 @@ class NW():
                 # print link, type(link), link.text
                 link.click()
 
+    def select_menu_item(self, sheet):
+        '''
+        sheets = (u'Листок персонажа', u'Инвентарь', u'Профессии', u'Аукционный дом', u'Биржа астральных бриллиантов', u'Рынок ZEN', u'Гильдия', u'Почта')
+        <div class="button-list">
+            <a class="nav-button mainNav dungeons nav-dungeons" data-url="#char(Yorick@vyorick)/adventures"></a>
+            <a class="nav-button mainNav charactersheet nav-charsheet" data-url="#char(Yorick@vyorick)/charactersheet"></a>
+            <a class="nav-button mainNav inventory nav-inventory" data-url="#char(Yorick@vyorick)/inventory"></a>
+            <a class="nav-button mainNav professions nav-professions" data-url="#char(Yorick@vyorick)/professions"></a>
+            <a class="nav-button mainNav auctionhouse nav-auction" data-url="#char(Yorick@vyorick)/auctionhouse"></a>
+            <a class="nav-button mainNav exchange nav-exchange" data-url="#char(Yorick@vyorick)/exchange"></a>
+            <a class="nav-button mainNav zenmarket nav-zenmarket" data-url="#char(Yorick@vyorick)/zenmarket"></a>
+            <a class="nav-button mainNav guild nav-guild" data-url="#guild(%D0%A1%D1%83%D0%BF%D0%B5%D1%80%D0%BD%D0%B0%D1%82%D1%83%D1%80%D0%B0%D0%BB%D1%8B)"></a>
+            <a class="nav-button mainNav mail nav-mail" data-url="#char(Yorick@vyorick)/mail"></a>
+        </div>
+        '''
+        logger.log("page: " + self.driver.title)
+        assert u'Портал Neverwinter' in self.driver.title
+        elem = self.driver.find_element_by_class_name('button-list')
+        # print elem, type(elem), elem.text
+        links = elem.find_elements_by_tag_name('a')
+        assert links
+        for link in links:
+            # print link.text, sheet
+            if sheet in link.text:
+                # print link, type(link), link.text
+                link.click()
 
-        # links = elem.find_elements_by_tag_name('a')
-        # print links, type(links)
-        '''
-        char_list = self.driver.find_elements_by_class_name('char-list-name')
-        assert char_list is not None
-        print char_list, type(char_list)
-        for char_name in char_list:
-            logger.log(char_name)
-        '''
