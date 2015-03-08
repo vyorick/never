@@ -44,7 +44,7 @@ class NW():
                 EC.presence_of_element_located((By.CLASS_NAME, "charselect"))
             )
         except:
-            print "element with class 'charselect' not found"
+            logger.log("element with class 'charselect' not found")
             return False
         # elem = self.driver.find_element_by_class_name('charselect')
         # print elem, type(elem), elem.text
@@ -111,7 +111,14 @@ class NW():
         button data-url-silent="/professions/collect-reward/1"  Забрать результат
         :return:
         '''
-        elem = self.driver.find_element_by_class_name('professions-slots')
+        try:
+            elem = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "professions-slots"))
+            )
+        except:
+            logger.log("element with class 'professions-slots' not found")
+            return False
+        # elem = self.driver.find_element_by_class_name('professions-slots')
         # slots = tasks_finished = elem.find_elements_by_tag_name('li')
         # print "slots count:", slots
         # elem.find_elements_by_partial_link_text('/professions/finish-now')
@@ -123,8 +130,12 @@ class NW():
         .professions-slots > li:nth-child(2) > span:nth-child(1) > div:nth-child(1) > div:nth-child(4) > div:nth-child(6) > button:nth-child(4)
         .professions-slots > li:nth-child(5) > span:nth-child(1) > div:nth-child(1) > div:nth-child(4) > div:nth-child(6) > button:nth-child(4)
         '''
-        tasks_finished = elem.find_elements_by_partial_link_text('collect-reward')
+        # elem.find_elements_by_tag_name('button')
+        # tasks_finished = elem.find_elements_by_partial_link_text('collect-reward')
+        buttons = elem.find_elements_by_tag_name('button')
+        tasks_in_progress = [b for b in buttons if b.text == u'Завершить сейчас']
+        tasks_finished = [b for b in buttons if b.text == u'Забрать результат']
         print "tasks finished:", len(tasks_finished)
-        tasks_in_progress = elem.find_elements_by_partial_link_text('finish-now')
+        # tasks_in_progress = elem.find_elements_by_partial_link_text('finish-now')
         print "tasks in progress:", len(tasks_in_progress)
         return tasks_finished
