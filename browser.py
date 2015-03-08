@@ -19,6 +19,7 @@ class NW():
     def __init__(self, base_url, cookies):
         self.driver = webdriver.Firefox()
         self.driver.get('https://gateway.nw.ru.perfectworld.eu/faq.html')
+        self.base_url = base_url
         logger.log("page loaded")
         for cookie_name in cookies:
             print "set cookie: %s -> %s" % (cookie_name, cookies[cookie_name])
@@ -36,6 +37,7 @@ class NW():
 
         elem = self.driver.find_element_by_id('pass')
         elem.send_keys(passwd + Keys.RETURN)
+        logger.log(u"Зашел")
 
     def select_character(self, char_name):
         logger.log("page: " + self.driver.title)
@@ -58,20 +60,17 @@ class NW():
     def select_menu_item(self, sheet):
         '''
         sheets = (u'Листок персонажа', u'Инвентарь', u'Профессии', u'Аукционный дом', u'Биржа астральных бриллиантов', u'Рынок ZEN', u'Гильдия', u'Почта')
-        <div class="button-list">
-            <a class="nav-button mainNav dungeons nav-dungeons" data-url="#char(Yorick@vyorick)/adventures"></a>
-            <a class="nav-button mainNav charactersheet nav-charsheet" data-url="#char(Yorick@vyorick)/charactersheet"></a>
-            <a class="nav-button mainNav inventory nav-inventory" data-url="#char(Yorick@vyorick)/inventory"></a>
-            <a class="nav-button mainNav professions nav-professions" data-url="#char(Yorick@vyorick)/professions"></a>
-            <a class="nav-button mainNav auctionhouse nav-auction" data-url="#char(Yorick@vyorick)/auctionhouse"></a>
-            <a class="nav-button mainNav exchange nav-exchange" data-url="#char(Yorick@vyorick)/exchange"></a>
-            <a class="nav-button mainNav zenmarket nav-zenmarket" data-url="#char(Yorick@vyorick)/zenmarket"></a>
-            <a class="nav-button mainNav guild nav-guild" data-url="#guild(%D0%A1%D1%83%D0%BF%D0%B5%D1%80%D0%BD%D0%B0%D1%82%D1%83%D1%80%D0%B0%D0%BB%D1%8B)"></a>
-            <a class="nav-button mainNav mail nav-mail" data-url="#char(Yorick@vyorick)/mail"></a>
-        </div>
         '''
+        try:
+            elem = WebDriverWait(self.driver, 10).until(
+                EC.title_is(u'Портал Neverwinter')
+            )
+        except:
+            logger.log(u"неожиданный заголовок html - " + self.driver.title)
+            return False
+
         logger.log("page: " + self.driver.title)
-        assert u'Портал Neverwinter' in self.driver.title
+        # assert u'Портал Neverwinter' in self.driver.title
         elem = self.driver.find_element_by_class_name('button-list')
         # print elem, type(elem), elem.text
         links = elem.find_elements_by_tag_name('a')
@@ -103,14 +102,7 @@ class NW():
                 # print link, type(link), link.text
                 link.click()
 
-    def collect_rewards(self):
-        '''
-        class="page-professions-overview"
-        class="panel-inner task-slot-progress"
-        class="panel-inner task-slot-finished"
-        button data-url-silent="/professions/collect-reward/1"  Забрать результат
-        :return:
-        '''
+    def get_finished_tasks(self):
         try:
             elem = WebDriverWait(self.driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "professions-slots"))
@@ -118,24 +110,77 @@ class NW():
         except:
             logger.log("element with class 'professions-slots' not found")
             return False
-        # elem = self.driver.find_element_by_class_name('professions-slots')
-        # slots = tasks_finished = elem.find_elements_by_tag_name('li')
-        # print "slots count:", slots
-        # elem.find_elements_by_partial_link_text('/professions/finish-now')
-        # for slot in xrange(slots):
-        # button = slot.find_elements_by_tag_name('button')
-
         '''
         .professions-slots > li:nth-child(1) > span:nth-child(1) > div:nth-child(1) > div:nth-child(4) > div:nth-child(6) > button:nth-child(4)
         .professions-slots > li:nth-child(2) > span:nth-child(1) > div:nth-child(1) > div:nth-child(4) > div:nth-child(6) > button:nth-child(4)
         .professions-slots > li:nth-child(5) > span:nth-child(1) > div:nth-child(1) > div:nth-child(4) > div:nth-child(6) > button:nth-child(4)
         '''
-        # elem.find_elements_by_tag_name('button')
-        # tasks_finished = elem.find_elements_by_partial_link_text('collect-reward')
         buttons = elem.find_elements_by_tag_name('button')
-        tasks_in_progress = [b for b in buttons if b.text == u'Завершить сейчас']
-        tasks_finished = [b for b in buttons if b.text == u'Забрать результат']
-        print "tasks finished:", len(tasks_finished)
-        # tasks_in_progress = elem.find_elements_by_partial_link_text('finish-now')
-        print "tasks in progress:", len(tasks_in_progress)
+        # tasks_in_progress = [b for b in buttons if b.text == u'Завершить сейчас']
+        tasks_finished = [b.click for b in buttons if b.text == u'Забрать результат']
+        logger.log("tasks finished: %d" % len(tasks_finished))
+        # print "tasks in progress:", len(tasks_in_progress)
         return tasks_finished
+
+
+    def finish_task(self):
+        try:
+            elem = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "professions-rewards-modal"))
+            )
+        except:
+            logger.log("element with class 'professions-rewards-modal' not found")
+            return False
+        # elem = self.driver.find_element_by_class_name('professions-rewards-modal')
+        button = elem.find_element_by_tag_name('button')
+        button.click()
+
+
+    def get_free_slots(self):
+        self.overview_click()
+        try:
+            elem = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "professions-slots"))
+            )
+        except:
+            logger.log("element with class 'professions-slots' not found")
+            return False
+        buttons = elem.find_elements_by_tag_name('button')
+        slots_free = [b.click for b in buttons if b.text == u'Выбрать поручение']
+        logger.log("свободных слотов: %d" % len(slots_free))
+        return slots_free
+
+
+    def run_new_task(self, task):
+        "http://gateway.nw.ru.perfectworld.eu/#char%28nick@email%29/professions-tasks/Leatherworking/Leatherworking_Tier3_Gather_Basic"
+        logger.log(u"запускаю новую задачу - %s" % task)
+        # widget_input = self.driver.find_element_by_tag_name('input')
+        try:
+            elem = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "dataTables_filter"))
+            )
+        except:
+            logger.log("element with class 'dataTables_filter' not found")
+            return False
+        widget_input = elem.find_element_by_tag_name('input')
+        widget_input.clear()
+        widget_input.send_keys(task + Keys.RETURN)
+        time.sleep(5)
+        table = self.driver.find_element_by_id('tasklist')
+        button = table.find_element_by_tag_name('button')
+        print button.text
+        button.click()
+        time.sleep(5)
+        try:
+            elem = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "box-footer"))
+            )
+        except:
+            logger.log("element with class 'box-footer' not found")
+            return False
+        buttons = elem.find_elements_by_tag_name('button')
+        for button in buttons:
+            if button.text == u'Начать поручение':
+                button.click()
+        logger.log("задача запущена")
+        time.sleep(5)
